@@ -2,5 +2,8 @@ mod database;
 
 fn main() {
     println!("Hello, world!");
-    database::migration();
+    match database::migration() {
+        Ok(()) => println!("Migration complete"),
+        Err(err) => println!("{}", err),
+    }
 }
