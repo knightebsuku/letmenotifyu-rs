@@ -1,10 +1,6 @@
 use rusqlite::{Connection, Result, NO_PARAMS};
 use std::path::Path;
 
-// fn versions(number: i32) -> Result<(i32)> {
-//     Ok(number)
-// }
-
 fn movie_changes() -> Vec<(i32, &'static str)> {
     let changes = vec![
         (2, "INSERT INTO genre(name) VALUES('Animation')"),
@@ -74,19 +70,14 @@ fn create_movie_table(conn: &mut Connection) -> Result<()> {
     )?;
     tx.execute(
         "CREATE TABLE movie(id INTEGER PRIMARY KEY,
-            title TEXT, date TEXT, yify_id INTEGER,genre_id INTEGER,
+            title TEXT, date_added TEXT, yify_id INTEGER,genre_id INTEGER,rating REAL,
+            youtube_url TEXT, imdb_url TEXT,description TEXT,year INTEGER,
            FOREIGN KEY(genre_id) REFERENCES genre(id))",
         NO_PARAMS,
     )?;
     tx.execute(
-        "CREATE TABLE detail(id INTEGER PRIMARY KEY, language TEXT,description TEXT,
-            rating REAL, youtube TEXT, imdb TEXT, movie_id INTEGER,
-            FOREIGN KEY(movie_id) REFERENCES movie(id))",
-        NO_PARAMS,
-    )?;
-    tx.execute(
-        "CREATE TABLE torrent_link(id INTEGER PRIMARY KEY, link TEXT, hash_sum TEXT,
-            movie_id INTEGER,
+        "CREATE TABLE torrent(id INTEGER PRIMARY KEY, link TEXT, hashTEXT,
+            movie_id INTEGER,quality TEXT,
             FOREIGN KEY(movie_id) REFERENCES movie(id))",
         NO_PARAMS,
     )?;
@@ -95,7 +86,7 @@ fn create_movie_table(conn: &mut Connection) -> Result<()> {
         NO_PARAMS,
     )?;
     tx.execute(
-        "CREATE TABLE images(id INTEGER PRIMARY KEY, path TEXT, movie_id INTEGER,
+        "CREATE TABLE image(id INTEGER PRIMARY KEY, path TEXT, movie_id INTEGER,
             FOREIGN KEY(movie_id) REFERENCES movie(id))",
         NO_PARAMS,
     )?;

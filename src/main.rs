@@ -1,3 +1,4 @@
+mod background;
 mod database;
 
 fn main() {
@@ -6,4 +7,7 @@ fn main() {
         Ok(()) => println!("Migration complete"),
         Err(err) => println!("{}", err),
     }
+    println!("OK");
+    // let handle = background::update();
+    // handle.join().unwrap();
 }
