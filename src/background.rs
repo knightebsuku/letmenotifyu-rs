@@ -1,45 +1,11 @@
+use super::yify::{Data, Yify};
 use chrono::prelude::{DateTime, Local};
 use rusqlite::{params, Connection, Result, NO_PARAMS};
-use serde::Deserialize;
 use std::fs::File;
 use std::io::BufReader;
 use std::thread;
 use std::thread::JoinHandle;
 use std::time::Duration;
-
-#[derive(Deserialize, Debug)]
-struct Torrents {
-    url: String,
-    hash: String,
-    quality: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct Movies {
-    id: i32,
-    url: String,
-    imdb_code: String,
-    title: String,
-    year: i32,
-    rating: f64,
-    genres: Vec<String>,
-    description_full: String,
-    yt_trailer_code: String,
-    medium_cover_image: String,
-    torrents: Vec<Torrents>,
-}
-
-#[derive(Deserialize, Debug)]
-struct Data {
-    movie_count: i32,
-    movies: Vec<Movies>,
-}
-
-#[derive(Deserialize, Debug)]
-struct Yify {
-    status: String,
-    data: Data,
-}
 
 pub fn update() -> JoinHandle<()> {
     let handle = thread::spawn(|| loop {
@@ -96,7 +62,7 @@ fn get_movies(data: &Data) -> Result<()> {
                     params![row_id, torrent.url, torrent.hash, torrent.quality],
                 )?;
             }
-            tx.commit();
+            tx.commit()?;
 
             println!("Movie title is {}", movie.title);
         }
