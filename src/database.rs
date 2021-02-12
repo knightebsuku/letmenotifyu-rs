@@ -76,7 +76,7 @@ fn create_movie_table(conn: &mut Connection) -> Result<()> {
         NO_PARAMS,
     )?;
     tx.execute(
-        "CREATE TABLE torrent(id INTEGER PRIMARY KEY, link TEXT, hashTEXT,
+        "CREATE TABLE torrent(id INTEGER PRIMARY KEY, link TEXT, hash TEXT,
             movie_id INTEGER,quality TEXT,
             FOREIGN KEY(movie_id) REFERENCES movie(id))",
         NO_PARAMS,
@@ -104,7 +104,7 @@ fn create_movie_table(conn: &mut Connection) -> Result<()> {
         "CREATE TABLE config(id INTEGER PRIMARY KEY, key TEXT, value TEXT)",
         NO_PARAMS,
     )?;
-    tx.execute("INSERT INTO migration(version) values(1)", NO_PARAMS)?;
+    tx.execute("INSERT INTO migration(version) VALUES(1)", NO_PARAMS)?;
     tx.commit()?;
     println!("new movie database created");
     Ok(())
@@ -120,6 +120,7 @@ pub fn migration() -> Result<()> {
         println!("Creating a new database");
         let mut conn = Connection::open("db.sqlite")?;
         create_movie_table(&mut conn)?;
+        migrate_movie(&mut conn)?;
         Ok(())
     }
 }

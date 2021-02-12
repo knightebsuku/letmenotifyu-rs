@@ -1,4 +1,5 @@
-use rusqlite::{Connection, Result, NO_PARAMS};
+use chrono::prelude::{DateTime, Local};
+use rusqlite::{params, Connection, Result, NO_PARAMS};
 use serde::Deserialize;
 use std::fs::File;
 use std::io::BufReader;
@@ -20,7 +21,7 @@ struct Movies {
     imdb_code: String,
     title: String,
     year: i32,
-    rating: f32,
+    rating: f64,
     genres: Vec<String>,
     description_full: String,
     yt_trailer_code: String,
@@ -49,7 +50,10 @@ pub fn update() -> JoinHandle<()> {
 
             let res: Result<Yify, serde_json::Error> = serde_json::from_reader(reader);
             if let Ok(yify) = res {
-                //get_movies(&yify.data);
+                match get_movies(&yify.data) {
+                    Ok(()) => println!("Movies inserted"),
+                    Err(error) => println!("Unable to insert movies, {}", error),
+                }
             }
         } else {
             println!("Unable to find movies.json");
@@ -61,6 +65,7 @@ pub fn update() -> JoinHandle<()> {
 
 fn get_movies(data: &Data) -> Result<()> {
     if let Ok(mut conn) = Connection::open("db.sqlite") {
+        let current_date: DateTime<Local> = Local::now();
         for movie in data.movies.iter() {
             let genre: i32 = conn.query_row(
                 "SELECT id from genre where name=?",
@@ -68,35 +73,43 @@ fn get_movies(data: &Data) -> Result<()> {
                 |r| r.get(0),
             )?;
             println!("{}", genre);
-            // let tx = conn.transaction();
-            // tx.execute(
-            //     "INSERT INTO movie(yify_id,genre_id,title,year,
-            //            imdb_url,rating,description_full,youtube_url,date_added) values(?,?,?,?,?,?,?,?,?)",
-            //     &[
-            //         &movie.id,
-            //         &genre,
-            //         &movie.title,
-            //         &movie.year,
-            //         &movie.imdb_code,
-            //         &movie.rating,
-            //         &movie.description_full,
-            //         &movie.yt_trailer_code,
-            //     ],
-            // )?;
-            // let row_id = tx.last_insert_rowid();
-            // for torrent in movie.torrents.iter() {
-            //     tx.execute(
-            //         "INSERT into torrent(movie_id, link,hash_sum, quality)",
-            //         &[&row_id, &torrent.url, &torrent.hash, &torrent.quality],
-            //     )?;
-            // }
-            // tx.commit();
+            let tx = conn.transaction()?;
+            tx.execute(
+                "INSERT INTO movie(yify_id,genre_id,title,year,
+                       imdb_url,rating,description,youtube_url,date_added) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9)",
+                params![
+                    movie.id,
+                    genre,
+                    movie.title,
+                    movie.year,
+                    movie.imdb_code,
+                    movie.rating,
+                    movie.description_full,
+                    movie.yt_trailer_code,
+                    current_date.date().to_string(),
+                ],
+            )?;
+            let row_id = tx.last_insert_rowid();
+            for torrent in movie.torrents.iter() {
+                tx.execute(
+                    "INSERT into torrent(movie_id, link,hash, quality) VALUES(?1,?2,?3,?4)",
+                    params![row_id, torrent.url, torrent.hash, torrent.quality],
+                )?;
+            }
+            tx.commit();
 
-            println!("Movie title is {}", movie.title)
+            println!("Movie title is {}", movie.title);
         }
+        Ok(())
+    } else {
+        Ok(())
     }
 }
 
 fn get_movie_image() -> Result<()> {
+    Ok(())
+}
+
+fn new_genre() -> Result<()> {
     Ok(())
 }

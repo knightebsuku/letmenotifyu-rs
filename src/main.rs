@@ -8,6 +8,6 @@ fn main() {
         Err(err) => println!("{}", err),
     }
     println!("OK");
-    // let handle = background::update();
-    // handle.join().unwrap();
+    let handle = background::update();
+    handle.join().unwrap();
 }
