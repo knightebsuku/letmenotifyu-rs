@@ -1,8 +1,13 @@
 use super::yify::{Data, Yify};
+use bytes::Bytes;
 use chrono::prelude::{DateTime, Local};
-use rusqlite::{params, Connection, Result, NO_PARAMS};
+use reqwest;
+use reqwest::Result as ReqResult;
+use rusqlite::{params, Connection, Result};
 use std::fs::File;
+use std::io::prelude::*;
 use std::io::BufReader;
+use std::path::{Path, PathBuf};
 use std::thread;
 use std::thread::JoinHandle;
 use std::time::Duration;
@@ -62,6 +67,18 @@ fn get_movies(data: &Data) -> Result<()> {
                     params![row_id, torrent.url, torrent.hash, torrent.quality],
                 )?;
             }
+            if let Ok((bytes, extension)) = get_movie_image(&movie.medium_cover_image) {
+                let mut file_name = String::from(&movie.title);
+                file_name.push_str(&extension);
+                let image_path = Path::new("images").join(&file_name);
+
+                if let Ok(()) = save_movie_image(&image_path, &bytes) {
+                    tx.execute(
+                        "INSERT INTO image(movie_id,path) VALUES(?1,?2)",
+                        params![row_id, image_path.to_str()],
+                    )?;
+                }
+            }
             tx.commit()?;
 
             println!("Movie title is {}", movie.title);
@@ -72,8 +89,22 @@ fn get_movies(data: &Data) -> Result<()> {
     }
 }
 
-fn get_movie_image() -> Result<()> {
+fn save_movie_image(path: &PathBuf, image: &Bytes) -> std::io::Result<()> {
+    let mut file = File::create(path)?;
+    file.write_all(image)?;
     Ok(())
+}
+
+fn get_movie_image(image_url: &String) -> ReqResult<(Bytes, String)> {
+    let mut extension: String = ".jpeg".to_string();
+    if image_url.ends_with(".png") {
+        extension = ".png".to_string();
+    } else if image_url.ends_with(".jpg") {
+        extension = ".jpg".to_string();
+    }
+    let image_body = reqwest::blocking::get(image_url)?;
+    let image_bytes = image_body.bytes()?;
+    Ok((image_bytes, extension))
 }
 
 fn new_genre() -> Result<()> {

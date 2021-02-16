@@ -6,9 +6,12 @@ fn main() {
     println!("Hello, world!");
     match database::migration() {
         Ok(()) => println!("Migration complete"),
-        Err(err) => println!("{}", err),
+        Err(err) => println!("Unable to complete migrations {}", err),
     }
-    println!("OK");
+    match yify::images_path() {
+        Ok(()) => println!("image directory ok"),
+        Err(err) => println!("Unable to create an image directory"),
+    }
     let handle = background::update();
     handle.join().unwrap();
 }

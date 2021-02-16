@@ -1,4 +1,6 @@
 use serde::Deserialize;
+use std::fs;
+use std::path::Path;
 
 #[derive(Deserialize, Debug)]
 pub struct Torrents {
@@ -32,4 +34,15 @@ pub struct Data {
 pub struct Yify {
     pub status: String,
     pub data: Data,
+}
+
+pub fn images_path() -> std::io::Result<()> {
+    if Path::new("./images").is_dir() {
+        println!("Images directory exists");
+        Ok(())
+    } else {
+        fs::create_dir("images")?;
+        println!("Images directory created");
+        Ok(())
+    }
 }
