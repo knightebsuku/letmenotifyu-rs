@@ -32,6 +32,14 @@ fn movie_changes() -> Vec<(i32, &'static str)> {
         (28, "INSERT INTO status(name) VALUES('Downloading')"),
         (29, "INSERT INTO status(name) VALUES('Complete')"),
         (30, "INSERT INTO status(name) VALUES('Error')"),
+        (
+            31,
+            "INSERT INTO config(key,value) VALUES('quality', '1080p')",
+        ),
+        (
+            32,
+            "INSERT INTO config(key,value) VALUES('duration', '21600')",
+        ),
     ];
     changes
 }
@@ -70,13 +78,13 @@ fn create_movie_table(conn: &mut Connection) -> Result<()> {
     )?;
     tx.execute(
         "CREATE TABLE movie(id INTEGER PRIMARY KEY,
-            title TEXT, date_added TEXT, yify_id INTEGER,genre_id INTEGER,rating REAL,
+            title TEXT NOT NULL, date_added TEXT, yify_id INTEGER UNIQUE,genre_id INTEGER NOT NULL,rating REAL,
             youtube_url TEXT, imdb_url TEXT,description TEXT,year INTEGER,
            FOREIGN KEY(genre_id) REFERENCES genre(id))",
         NO_PARAMS,
     )?;
     tx.execute(
-        "CREATE TABLE torrent(id INTEGER PRIMARY KEY, link TEXT, hash TEXT,
+        "CREATE TABLE torrent(id INTEGER PRIMARY KEY, link TEXT NOT NULL, hash TEXT NOT NULL,
             movie_id INTEGER,quality TEXT,
             FOREIGN KEY(movie_id) REFERENCES movie(id))",
         NO_PARAMS,
