@@ -94,12 +94,14 @@ pub fn create(data: &Data) -> Result<(), Box<dyn Error>> {
         println!("Working on {}", &movie.title);
         let genre_id: i64 = get_genre(&conn, &movie.genres[0])?;
         let tx = conn.transaction()?;
-        let row_id = detail(&tx, &movie, genre_id, current_date)?;
-
-        torrent(&row_id, &tx, &movie.torrents)?;
-        let (image_bytes, extension) = fetch_image(&movie.medium_cover_image)?;
-        image(&tx, &row_id, &movie.title, &image_bytes, &extension)?;
-        tx.commit()?;
+        if let Ok(row_id) = detail(&tx, &movie, genre_id, current_date) {
+            torrent(&row_id, &tx, &movie.torrents)?;
+            let (image_bytes, extension) = fetch_image(&movie.medium_cover_image)?;
+            image(&tx, &row_id, &movie.title, &image_bytes, &extension)?;
+            tx.commit()?;
+        } else {
+            println!("MOvie already exists");
+        }
     }
     Ok(())
 }
