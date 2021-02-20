@@ -10,7 +10,7 @@ pub struct Torrents {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct Movies {
+pub struct Movie {
     pub id: i32,
     pub url: String,
     pub imdb_code: String,
@@ -27,7 +27,7 @@ pub struct Movies {
 #[derive(Deserialize, Debug)]
 pub struct Data {
     pub movie_count: i32,
-    pub movies: Vec<Movies>,
+    pub movies: Vec<Movie>,
 }
 
 #[derive(Deserialize, Debug)]

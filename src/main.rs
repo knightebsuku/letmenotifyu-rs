@@ -1,5 +1,6 @@
 mod background;
 mod database;
+mod movie;
 mod yify;
 
 fn main() {
