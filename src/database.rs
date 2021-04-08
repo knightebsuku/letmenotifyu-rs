@@ -1,4 +1,5 @@
 use rusqlite::{Connection, Result, NO_PARAMS};
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 
 fn movie_changes() -> Vec<(i32, &'static str)> {
@@ -38,7 +39,12 @@ fn movie_changes() -> Vec<(i32, &'static str)> {
         ),
         (
             32,
-            "INSERT INTO config(key,value) VALUES('duration', '21600')",
+            "INSERT INTO config(key,value) VALUES('interval', '21600')",
+        ),
+        (33, "INSERT INTO config(key,value) VALUES('port', '9000')"),
+        (
+            34,
+            "INSERT INTO config(key,value) VALUES('host', '127.0.0.1')",
         ),
     ];
     changes
