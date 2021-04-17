@@ -1,11 +1,7 @@
 use super::movie;
 use super::yify::Yify;
 use reqwest;
-use reqwest::Result as ReqResult;
 use std::error::Error;
-use std::fs::File;
-use std::io::prelude::*;
-use std::io::BufReader;
 use std::thread;
 use std::thread::JoinHandle;
 use std::time::Duration;
