@@ -1,6 +1,6 @@
 use super::yify::{Data, Movie, Torrents};
 use bytes::Bytes;
-use chrono::prelude::{DateTime, Local};
+use chrono::prelude::{Date, Local, NaiveDate};
 use reqwest;
 use reqwest::Result as ReqResult;
 use rusqlite::{params, Connection, Result, Transaction};
@@ -13,20 +13,26 @@ const JPG: &str = ".jpg";
 const PNG: &str = ".png";
 const JPEG: &str = ".jpeg";
 
-fn detail(tx: &Transaction, data: &Movie, genre_id: i64, date: DateTime<Local>) -> Result<i64> {
+fn detail(tx: &Transaction, data: &Movie, genre_id: i64, date: NaiveDate) -> Result<i64> {
+    let movie_title: String;
+    if data.title.contains("/") {
+        movie_title = data.title.replace("/", "-");
+    } else {
+        movie_title = data.title.clone();
+    }
     tx.execute(
                 "INSERT INTO movie(yify_id,genre_id,title,year,
                        imdb_url,rating,description,youtube_url,date_added) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9)",
                 params![
                     data.id,
                     genre_id,
-                    data.title,
+                    movie_title,
                     data.year,
                     data.imdb_code,
                     data.rating,
                     data.description_full,
                     data.yt_trailer_code,
-                    date.date().to_string(),
+                    date.to_string(),
                 ],
             )?;
     let row_id = tx.last_insert_rowid();
@@ -75,6 +81,9 @@ fn image(
 ) -> Result<(), Box<dyn Error>> {
     let mut file_name = String::from(title);
     file_name.push_str(extension);
+    if file_name.contains("/") {
+        file_name = file_name.replace("/", "-");
+    }
     let image_path = Path::new("images").join(&file_name);
 
     let mut file = File::create(&image_path)?;
@@ -89,12 +98,13 @@ fn image(
 
 pub fn create(data: &Data) -> Result<(), Box<dyn Error>> {
     let mut conn = Connection::open("db.sqlite")?;
-    let current_date: DateTime<Local> = Local::now();
+    // Add sqlite WAL mode
+    let current_date: Date<Local> = Local::now().date();
     for movie in data.movies.iter() {
         println!("Working on {}", &movie.title);
         let genre_id: i64 = get_genre(&conn, &movie.genres[0])?;
         let tx = conn.transaction()?;
-        if let Ok(row_id) = detail(&tx, &movie, genre_id, current_date) {
+        if let Ok(row_id) = detail(&tx, &movie, genre_id, current_date.naive_local()) {
             torrent(&row_id, &tx, &movie.torrents)?;
             let (image_bytes, extension) = fetch_image(&movie.medium_cover_image)?;
             image(&tx, &row_id, &movie.title, &image_bytes, &extension)?;
