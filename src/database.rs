@@ -1,5 +1,4 @@
 use rusqlite::{Connection, Result, NO_PARAMS};
-use serde::{Deserialize, Serialize};
 use std::path::Path;
 
 fn movie_changes() -> Vec<(i32, &'static str)> {
@@ -84,7 +83,7 @@ fn create_movie_table(conn: &mut Connection) -> Result<()> {
     )?;
     tx.execute(
         "CREATE TABLE movie(id INTEGER PRIMARY KEY,
-            title TEXT NOT NULL, date_added TEXT, yify_id INTEGER UNIQUE,genre_id INTEGER NOT NULL,rating REAL,
+            title TEXT NOT NULL, date_added TIMESTAMP, yify_id INTEGER UNIQUE,genre_id INTEGER NOT NULL,rating REAL,
             youtube_url TEXT, imdb_url TEXT,description TEXT,year INTEGER,
            FOREIGN KEY(genre_id) REFERENCES genre(id))",
         NO_PARAMS,
